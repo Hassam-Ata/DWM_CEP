@@ -72,10 +72,30 @@ plt.show()
 data['Cluster'] = cluster_labels + 1
 
 # Ensure output folder exists
-output_folder = 'csv_output'
+output_folder = 'k_means/csv_output'
 os.makedirs(output_folder, exist_ok=True)
 
 # Save to CSV without printing
 output_path = os.path.join(output_folder, 'customer_clusters.csv')
 data[['Customer ID', 'Total Spend', 'Items Purchased', 'Cluster']].to_csv(
     output_path, index=False)
+
+
+# Summarize clusters
+summary = data.groupby('Cluster')[['Total Spend', 'Items Purchased']].agg(
+    ['mean', 'min', 'max', 'count'])
+
+# Flatten multi-level column names
+summary.columns = ['_'.join(col).strip() for col in summary.columns.values]
+summary.reset_index(inplace=True)
+
+# Round 'Items Purchased' stats to integers
+summary['Items Purchased_mean'] = summary['Items Purchased_mean'].round().astype(int)
+summary['Items Purchased_min'] = summary['Items Purchased_min'].astype(int)
+summary['Items Purchased_max'] = summary['Items Purchased_max'].astype(int)
+
+# Save summary to CSV
+summary_output_path = os.path.join(output_folder, 'cluster_summary.csv')
+summary.to_csv(summary_output_path, index=False)
+
+print("Clustering complete. Summary saved to 'csv_output/cluster_summary.csv'.")
